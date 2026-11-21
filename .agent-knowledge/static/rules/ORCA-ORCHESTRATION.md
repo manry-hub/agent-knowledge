@@ -1,75 +1,65 @@
-# Orca Multi-Session Workflow
+# Orca Isolated Testing Workflow
 
-Use this workflow only when the user explicitly requests multi-agent orchestration, role separation, or parallel work in Orca. It is optional for small tasks and single-session work.
+Orca orchestration is strictly and exclusively reserved for **testing and quality verification**. Primary implementation sessions focus on planning, design, and code authoring; **every test execution must occur in a separate, isolated Orca session**.
 
 ## Principles
 
-- The workflow is **provider-agnostic**. Use one agent provider with separate sessions; do not tie the workflow to a particular provider or model.
-- Split parallel work by **branch and file ownership**, not merely by role labels.
-- Each branch has exactly one writing session. Other sessions may read that branch but must not write to it.
-- Do not start parallel sessions until every branch has a distinct physical worktree verified by `git worktree list`.
-- If Orca shows multiple workspaces with the same checkout path, they are not isolated. Do not run parallel writers; repair the registry or worktree setup first.
+1. **Testing-Only Scope**
+   - Use Orca multi-session orchestration solely for running and verifying test suites (unit, integration, E2E, security, regression, and performance tests).
+   - Do not use Orca orchestration for parallel feature authoring, splitting code writes across multiple implementation agents, or multi-branch code generation.
+
+2. **Strict Session Isolation**
+   - **Never run test suites directly in the primary implementation session.**
+   - Every test run must execute inside an independent Orca worker session.
+   - If tests mutate databases, generate filesystem artifacts, write local cache, or start background services (e.g., test containers, mock servers, Playwright browsers), run the session in a dedicated worktree (`workspace: "share"` or `"branch"`) to prevent dirtying or corrupting the primary workspace.
+
+3. **Tester Role Specialization**
+   - The isolated Orca testing session must apply the `.agent-knowledge/static/agents/tester.md` profile.
+   - The test session acts adversarially: verifies happy paths, edge cases, boundaries, failure modes, and deterministic execution without modifying production code.
+
+4. **Deterministic Feedback Loop**
+   - The primary session implements code and hands off test targets to the testing session.
+   - The testing session runs tests, captures output (status, traces, timings, coverage), and reports findings back to the primary session.
+   - If tests fail, fixes must be authored in the primary session, followed by re-dispatching to the testing session for verification.
 
 ## Workflow
 
-1. **Planning session**
-   - Analyze the repository and requirements without changing code, configuration, or project documentation. When `codebase-memory-mcp` is available, use `search_graph`, `trace_path`, and `get_architecture` to map dependencies, boundaries, and contracts.
-   - Define scope, cross-scope contracts, file ownership, dependencies, acceptance criteria, and the integration strategy.
-   - Send the plan to the user. Do not open implementation sessions before explicit approval.
-2. **User decision gate**
-   - The user approves, revises, or rejects the plan.
-   - Explicit approval is the sole authorization to start implementation.
-3. **Branch and worktree preparation**
-   - Ensure a clean baseline on `develop` or the approved Gitflow source branch (`main` only for a production hotfix).
-   - Create one feature branch for each independent scope, for example `feature/<scope>-frontend` and `feature/<scope>-backend`.
-   - Create one genuinely separate Orca worktree for each branch, then verify every session's branch and physical path before sending an implementation prompt.
-   - Designate one integration session for `develop`. It must not merge changes until all dependent branches are complete.
-4. **Parallel implementation**
-   - Each session modifies only its owned files and runs checks relevant to its scope.
-   - The approved contract is the shared source of truth. If the contract, scope, or a dependency must change, the session stops and asks the planner to obtain a user decision.
-   - Each implementation session reports its commit, changed files, verification results, and blockers from its own branch.
-5. **Integration**
-   - The integration session merges feature scope branches into `develop`, resolves conflicts only according to the approved contract, and runs combined verification.
-   - Do not merge into `main` outside the Gitflow release or hotfix review/PR flow.
-   - Report the integration commit, checks, deviations, and blockers to the user. There is no automatic review-agent stage unless the user requests one.
+1. **Primary Session: Prepare Test Scope**
+   - The primary session completes an atomic code change or unit of work.
+   - Inspects diff and modified files using git status or knowledge-graph tools (`trace_path`, `detect_changes`).
+   - Identifies required test targets (e.g., unit test files, integration endpoints, E2E specs).
+   - Prepares the test dispatch payload: target files, test commands, expected behavior, and preconditions.
 
-## Orca Practices
+2. **Dispatch to Isolated Orca Testing Session**
+   - Launch or hand off to an Orca testing session dedicated to test execution.
+   - Prompt the testing session with the target scope and instruct it to apply `.agent-knowledge/static/agents/tester.md`.
+   - Ensure the testing session operates in its own isolated environment/terminal.
 
-- Create branches before implementation sessions begin, then associate each Orca session with that branch's worktree.
-- Read a terminal's status before sending it a follow-up prompt.
-- Use structured Orca coordination only when the user requests supervision, structured status, a dependency DAG, or ask/reply flows. Use worktree and terminal commands for ordinary handoffs.
-- If a worktree cannot be created as a separate checkout, do not simulate parallel work in one folder. Work sequentially or repair isolation first.
+3. **Isolated Test Execution**
+   - The Orca testing session:
+     - Follows repository stack conventions (see `.agent-knowledge/static/rules/CODING-STANDARDS.md` and `codestyle/` guides).
+     - Executes relevant test runners (e.g., `npm test`, `pytest`, `go test ./...`, `npx playwright test`).
+     - Verifies test determinism and independence (no shared state, zero arbitrary sleep timeouts).
+     - Checks edge cases and boundary conditions.
+
+4. **Report Back to Primary Session**
+   - The testing session delivers a concise, evidence-driven summary:
+     - Pass / Fail status and exact test counts.
+     - Failure details (stack traces, offending assertions, unexpected state).
+     - Execution duration and observed flakiness.
+     - Unverified areas or environment limitations.
+   - If failures exist, the primary session resolves them and repeats step 2.
+   - If all tests pass, the primary session proceeds to task completion.
 
 ## Request Patterns
 
-Use these patterns when the user explicitly requests Orca coordination. A handoff must include the goal, the current state, relevant files or knowledge-graph context, the expected result, and the next action. Read the target terminal's status before sending it.
+Use these patterns to dispatch test suites to an isolated Orca session:
 
-### Hand off an active task
+### Run unit and integration tests in an isolated session
+> Use /orchestration to dispatch a separate testing session using the `tester` agent profile. Run the unit and integration tests for `<module-or-path>`. Report back pass/fail counts, execution time, and any assertion failures.
 
-Move ownership to an idle agent with enough context to continue:
+### Run End-to-End (E2E) or Playwright tests
+> Use /orchestration to launch an isolated Orca session for E2E tests. Run `<e2e-spec-file>` against the local build. Ensure test fixtures and browser artifacts remain isolated in the test session, and report any failing journeys with trace logs.
 
-> Use /orchestration to hand this billing settings task to the idle Claude agent. Include the goal, current context, and what they should finish next.
-
-### Hand off to another worktree
-
-Move work to an agent already working from a different branch. Include the target worktree as well as the handoff context:
-
-> Use /orchestration to hand this settings cleanup to the agent in the settings-polish worktree. Send the goal, relevant files, and expected result.
-
-### Run a phased workflow
-
-Use sequential child agents only where each phase depends on the previous one. Start the next phase after the preceding agent reports completion and its output is available:
-
-> Use /orchestration to run this auth refactor in phases: plan, backend, UI, then tests. Start each child agent after the previous phase is done.
-
-### Run independent work in parallel
-
-Split only non-overlapping scopes. Give every implementation agent a separate branch, worktree, and explicit file ownership before work starts:
-
-> Use /orchestration to split this auth refactor across parallel child agents: API contract, backend call sites, UI flow, and test gaps.
-
-### Split a large change into smaller PRs
-
-Create one child worktree and reviewable branch per independently shippable scope. Preserve the approved contract and use the integration workflow for dependencies:
-
-> Use /orchestration to split this onboarding update into smaller PRs, each in its own child worktree: setup state, settings UI, copy, and tests.
+### Adversarial edge-case and boundary verification
+> Use /orchestration to have a separate Orca testing session apply `tester.md` on `<changed-components>`. Formulate boundary tests (null, off-by-one, timezone, concurrency) and report defect findings back to this session.

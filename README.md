@@ -56,17 +56,12 @@ flowchart TD
   prodSetup --> work
   taskPrompt --> work
 
-  inspect --> orca{Explicit Orca multi-agent request?}
-  orca -->|Yes| orcaPlan[Read Orca rules and prepare a read-only plan]
-  orcaPlan --> approval{User approves plan?}
-  approval -->|Yes| isolation[Create and verify isolated branches and worktrees]
-  approval -->|No| revise[Revise plan or stop]
-  isolation --> implementers[Implementation sessions own separate scopes]
-  implementers --> integration[Integrate completed branches and verify]
-  integration --> verify
-
-  work --> verify[Run relevant checks and review the diff]
-  verify --> living[Update affected living documentation]
+  work --> verify[Run static checks and review diff in primary session]
+  verify --> testing{Execute test suite?}
+  testing -->|Yes| orcaTest[Dispatch to isolated Orca session with tester profile]
+  orcaTest --> testReport[Report test results and failures back to primary session]
+  testReport --> living[Update affected living documentation]
+  testing -->|No| living
   living --> adr{Material architectural decision?}
   adr -->|Yes| adrRecord[Create numbered ADR from template]
   adr -->|No| taskRecord{Substantial or long-running work?}
@@ -91,7 +86,7 @@ This is a decision guide, not a requirement to create every artifact for every t
 | Security requirements during implementation                                              | Applicable controls in [security baseline](.agent-knowledge/static/rules/SECURITY-BASELINE.md)                                                                          |
 | Project stack and testing                                                                | Matching guides in [codestyle](.agent-knowledge/static/rules/codestyle/); shared practices are in [coding standards](.agent-knowledge/static/rules/CODING-STANDARDS.md) |
 | UI direction, interactions, or design system                                             | Root [DESIGN.md](DESIGN.md); update affected guidance as decisions and implementation evolve                                                                            |
-| Explicit multi-agent work in Orca                                                        | [Orca orchestration](.agent-knowledge/static/rules/ORCA-ORCHESTRATION.md)                                                                                               |
+| Isolated test execution in Orca                                                          | [Orca isolated testing](.agent-knowledge/static/rules/ORCA-ORCHESTRATION.md)                                                                                            |
 
 
 Inspect manifests, lockfiles, runtime versions, and tool configuration before running project commands or changing dependencies. Follow the project's declared versions and scripts. The safety rules also govern authorization for external actions and handling of secrets.
@@ -103,7 +98,7 @@ Inspect manifests, lockfiles, runtime versions, and tool configuration before ru
 | -------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
 | `.agent-knowledge/static/rules/`             | Safety, Git, security, orchestration, coding, stack-specific, and anti-slop guidance.                                                   |
 | `.agent-knowledge/static/commands/`          | Task-specific prompts, invoked manually when relevant.                                                                                  |
-| `.agent-knowledge/static/agents/`            | Role profiles, read in the current session when explicitly requested.                                                                    |
+| `.agent-knowledge/static/agents/`            | Role profiles, read in the current session when explicitly requested.                                                                   |
 | `.agent-knowledge/static/templates/`         | Canonical structures for documents and records; copy the structure into the output rather than editing the template.                    |
 | `.agent-knowledge/dynamic/docs/`             | Living product, design, security, and production documentation; see the [documentation index](.agent-knowledge/dynamic/docs/README.md). |
 | `.agent-knowledge/dynamic/docs/notes/`       | ADRs and specifications created for the project.                                                                                        |
@@ -150,27 +145,21 @@ The following profiles are available for explicit use:
 
 When writing a profile, describe its purpose, scope, workflow, expected output, and any related guidance to consult.
 
-## Optional Orca workflow: plan → isolated scopes → integration
+## Orca workflow: isolated test sessions
 
-When a user explicitly asks for multi-agent orchestration, role separation, or parallel work in Orca, first use a read-only planning session. It defines the scope, contracts, file ownership, dependencies, acceptance criteria, and integration approach; implementation begins only after the user explicitly approves that plan.
+Orca orchestration is strictly and exclusively reserved for testing. Primary implementation sessions handle planning, architecture, and code authoring; every test suite execution (unit, integration, E2E, security) must run inside a separate, isolated Orca session applying the [tester](.agent-knowledge/static/agents/tester.md) profile.
 
-For each independent scope, create a feature branch and a genuinely separate worktree before opening its implementation session. One writing session owns each branch and its files. Verify the branch and physical checkout for every session—multiple Orca workspaces pointing to the same checkout are not isolated and must not be used for parallel writers.
+The primary session prepares the test scope and handoff context, while the isolated session executes the test suite, verifies determinism and boundaries, and reports findings back. This prevents test artifacts, databases, and background processes from dirtying the primary workspace.
 
-Each implementation session changes only its approved scope, runs its relevant checks, and reports its commit, changed files, verification, and blockers. A dedicated integration session merges completed feature scope branches into `develop`, runs combined verification, and follows the Gitflow review or pull-request process: production changes reach `main` only through a reviewed `release/*` or `hotfix/*` branch. The workflow is provider-agnostic and has no automatic review-agent stage.
+### Orca test request examples
 
-### Orca request examples
+Use an explicit orchestration request whenever executing tests. Dispatch target scope, expected behavior, and verification criteria to an isolated session:
 
-Use an explicit request when a task needs a handoff, a dependent sequence, or isolated parallel scopes. A handoff should name the goal, current context, relevant files or worktree, expected result, and next action.
+> Use /orchestration to dispatch a separate testing session using the `tester` agent profile. Run the unit and integration tests for `<module-or-path>`. Report back pass/fail counts, execution time, and any assertion failures.
 
-> Use /orchestration to hand this billing settings task to the idle Claude agent. Include the goal, current context, and what they should finish next.
+> Use /orchestration to launch an isolated Orca session for E2E tests. Run `<e2e-spec-file>` against the local build and report any failing journeys with trace logs.
 
-> Use /orchestration to hand this settings cleanup to the agent in the settings-polish worktree. Send the goal, relevant files, and expected result.
-
-> Use /orchestration to run this auth refactor in phases: plan, backend, UI, then tests. Start each child agent after the previous phase is done.
-
-> Use /orchestration to split this auth refactor across parallel child agents: API contract, backend call sites, UI flow, and test gaps.
-
-> Use /orchestration to split this onboarding update into smaller PRs, each in its own child worktree: setup state, settings UI, copy, and tests.
+> Use /orchestration to have a separate Orca testing session apply `tester.md` on `<changed-components>`. Formulate boundary tests (null, off-by-one, timezone, concurrency) and report defect findings back.
 
 ## Recommended Skills
 
@@ -191,15 +180,15 @@ Optional agent skills for focused workflows. Use them when they fit the task and
 Optional tool integrations. Use them when they match the task and are available in your agent environment.
 
 
-| MCP server                                                                                                  | Recommended use                                                                       |
-| ----------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| [FigCraft MCP](https://github.com/storytold/figcraft)                                                       | Create and edit designs, inspect documents as JSON, and render previews.              |
-| [Pencil MCP](https://github.com/highagency/pencil-desktop-releases)                                         | Reading or editing Pencil designs and `.pen` files.                                   |
-| [Playwright MCP](https://github.com/microsoft/playwright-mcp)                                               | Browser-based user flows and end-to-end checks.                                       |
-| [Chrome DevTools MCP](https://github.com/ChromeDevTools/chrome-devtools-mcp)                                | Runtime diagnostics for console, network, styles, performance, or memory.             |
-| [Context7 MCP](https://github.com/upstash/context7)                                                         | Current documentation for libraries, frameworks, SDKs, APIs, CLIs, or cloud services. |
+| MCP server                                                                                                  | Recommended use                                                                        |
+| ----------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| [FigCraft MCP](https://github.com/storytold/figcraft)                                                       | Create and edit designs, inspect documents as JSON, and render previews.               |
+| [Pencil MCP](https://github.com/highagency/pencil-desktop-releases)                                         | Reading or editing Pencil designs and `.pen` files.                                    |
+| [Playwright MCP](https://github.com/microsoft/playwright-mcp)                                               | Browser-based user flows and end-to-end checks.                                        |
+| [Chrome DevTools MCP](https://github.com/ChromeDevTools/chrome-devtools-mcp)                                | Runtime diagnostics for console, network, styles, performance, or memory.              |
+| [Context7 MCP](https://github.com/upstash/context7)                                                         | Current documentation for libraries, frameworks, SDKs, APIs, CLIs, or cloud services.  |
 | [codebase-memory-mcp](https://github.com/DeusData/codebase-memory-mcp)                                      | Persistent knowledge graph for code discovery, call-path tracing, and impact analysis. |
-| [Sequential Thinking MCP](https://github.com/modelcontextprotocol/servers/tree/main/src/sequentialthinking) | Complex or uncertain multi-step analysis and planning.                                |
+| [Sequential Thinking MCP](https://github.com/modelcontextprotocol/servers/tree/main/src/sequentialthinking) | Complex or uncertain multi-step analysis and planning.                                 |
 
 
 ## Requirements
@@ -257,9 +246,9 @@ Vendored skills retain their own license and notice files. The top-level license
 
 ## Prompt for first time before ask ai
 
-I want a deeper version of this task, not a bigger one. Before rewriting it:   
-(1) say what a top professional in this field would do here that I’m not asking for;   
-(2) name the rawest material they would start from instead of what has already been digested for me;   
-(3) name the specific methods and tools they would use;   
+I want a deeper version of this task, not a bigger one. Before rewriting it:  
+(1) say what a top professional in this field would do here that I’m not asking for;  
+(2) name the rawest material they would start from instead of what has already been digested for me;  
+(3) name the specific methods and tools they would use;  
 (4) say what, other than you or me, would show the result is right. Then rewrite my prompt to ask for exactly that;
-(5) Observe and follow all instructions, rules, and personas outlined in the agents.md file.
+(5) Observe and follow all instructions, rules, and personas outlined in the agents.md file;
