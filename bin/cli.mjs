@@ -23,15 +23,7 @@ const pathSeparator = path.sep;
 const pluginReferencesPath =
   /^\.agent-knowledge\/skills\/[^/]+\/upstream\/plugins\/[^/]+\/skills\/[^/]+\/references$/;
 const pluginReferencesTarget = '../../../../data';
-const emptyDynamicRecordFiles = new Set([
-  path.join('.agent-knowledge', 'dynamic', 'reports', 'LESSON.md')
-]);
 const dynamicTaskReportPath = /^\.agent-knowledge\/dynamic\/reports\/tasks\/.+\.md$/;
-
-async function readTemplateFile(file) {
-  if (emptyDynamicRecordFiles.has(file.relativePath)) return '';
-  return readFile(file.sourcePath);
-}
 
 export function printHelp(write = (message) => process.stdout.write(message)) {
   write([
@@ -176,7 +168,7 @@ export async function materializeTemplate(sourceRoot, destinationRoot) {
   for (const file of files) {
     const destinationPath = path.join(destinationRoot, file.relativePath);
     await mkdir(path.dirname(destinationPath), { recursive: true });
-    await writeFile(destinationPath, await readTemplateFile(file));
+    await writeFile(destinationPath, await readFile(file.sourcePath));
     const sourceStats = await stat(file.sourcePath);
     await chmod(destinationPath, sourceStats.mode & 0o777);
   }
@@ -298,7 +290,7 @@ async function writeSelectedFiles(targetRoot, files, conflicts, choices) {
 
     const destinationPath = path.join(targetRoot, file.relativePath);
     await mkdir(path.dirname(destinationPath), { recursive: true });
-    await writeFile(destinationPath, await readTemplateFile(file));
+    await writeFile(destinationPath, await readFile(file.sourcePath));
     const sourceStats = await stat(file.sourcePath);
     await chmod(destinationPath, sourceStats.mode & 0o777);
     installed.push(file.relativePath);

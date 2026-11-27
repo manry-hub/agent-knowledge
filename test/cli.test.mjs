@@ -314,7 +314,10 @@ test('local setup installs a complete app and updates the user PATH idempotently
     await readFile(path.join(paths.appRoot, 'AGENTS.md'), 'utf8'),
     await readFile(path.join(repositoryRoot, 'AGENTS.md'), 'utf8')
   );
-  assert.equal(await readFile(path.join(paths.appRoot, '.agent-knowledge', 'dynamic', 'reports', 'LESSON.md'), 'utf8'), '');
+  assert.equal(
+    await readFile(path.join(paths.appRoot, '.agent-knowledge', 'dynamic', 'reports', 'LESSON.md'), 'utf8'),
+    await readFile(path.join(repositoryRoot, '.agent-knowledge', 'dynamic', 'reports', 'LESSON.md'), 'utf8')
+  );
   await assert.doesNotReject(stat(path.join(paths.appRoot, '.agent-knowledge', 'dynamic', 'reports', 'tasks')));
   await assert.rejects(stat(path.join(paths.appRoot, '.agent-knowledge', 'dynamic', 'tasks', 'todo.md')));
   await assert.rejects(stat(path.join(paths.appRoot, '.agent-knowledge', 'dynamic', 'reports', 'tasks', '001-devdocs-project-modes.md')));
@@ -475,7 +478,10 @@ test('--force installs the complete bundle and replaces file conflicts', async (
   await init({ targetDirectory: target, sourceRoot: repositoryRoot, force: true, write: () => {} });
   assert.match(await readFile(path.join(target, 'AGENTS.md'), 'utf8'), /^# Agent Guidance/);
   assert.equal(await readFile(legacyFile, 'utf8'), 'legacy project configuration');
-  assert.equal(await readFile(path.join(target, '.agent-knowledge', 'dynamic', 'reports', 'LESSON.md'), 'utf8'), '');
+  assert.equal(
+    await readFile(path.join(target, '.agent-knowledge', 'dynamic', 'reports', 'LESSON.md'), 'utf8'),
+    await readFile(path.join(repositoryRoot, '.agent-knowledge', 'dynamic', 'reports', 'LESSON.md'), 'utf8')
+  );
   await assert.doesNotReject(stat(path.join(target, '.agent-knowledge', 'dynamic', 'reports', 'tasks')));
   await assert.rejects(stat(path.join(target, '.agent-knowledge', 'dynamic', 'tasks', 'todo.md')));
   await assert.rejects(stat(path.join(target, '.agent-knowledge', 'dynamic', 'reports', 'tasks', '001-devdocs-project-modes.md')));
