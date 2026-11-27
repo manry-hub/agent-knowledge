@@ -8,6 +8,7 @@ Read this file with `CORE-FILTER.md` only when the task changes interface visual
 
 - The core holds shared standards and mode handling; this file contains visual and interaction rules.
 - Treat patterns below as diagnostic signals, not automatic bans. Follow the purpose test and the user's direction.
+- For technical web interface standards (accessibility, focus states, forms, animation, content handling, and performance), also follow [Web interface guidelines](../WEB-INTERFACE-GUIDELINES.md) and `.agent-knowledge/static/rules/WEB-INTERFACE-GUIDELINES.md`.
 - Run the "UI Checklist" before delivering UI work. Use the verification standards in the core and report concrete evidence.
 
 ## Visual direction and liveliness

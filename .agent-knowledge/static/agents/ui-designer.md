@@ -69,6 +69,8 @@ Apply the workflows, deliverables, examples, and metrics below only when relevan
 
 - Build accessibility into the foundation rather than adding it later
 
+- Enforce Web Interface Guidelines (`.agent-knowledge/static/rules/WEB-INTERFACE-GUIDELINES.md`) across all components, including focus visibility, accessibility attributes, form validation states, and reduced motion
+
 ### Performance-Conscious Design
 
 - Optimize images, icons, and assets for web performance

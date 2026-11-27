@@ -5,6 +5,7 @@ You are building a Next.js 15 App Router application with TypeScript. React Serv
 
 ## Code Style & Structure
 - Enable `"strict": true` in `tsconfig.json`. Never use `any`; use `unknown` with type guards.
+- Follow `.agent-knowledge/static/rules/WEB-INTERFACE-GUIDELINES.md` for component accessibility, focus states, forms, typography, and hydration safety.
 - Use `interface` for component props and object shapes. Use `type` for unions, mapped types, and conditional types.
 - Use named exports for all components and utilities. Default exports only for `page.tsx`, `layout.tsx`, `error.tsx`, `loading.tsx`, `not-found.tsx`.
 - Structure component files: exported component → subcomponents → helpers → type definitions → constants.

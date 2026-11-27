@@ -145,6 +145,12 @@ test('configuration references resolve and safe-operations guidance is scaffolde
   assert.ok(templateFiles.some(({ relativePath }) =>
     relativePath === '.agent-knowledge/static/rules/CODING-STANDARDS.md'
   ));
+  assert.ok(templateFiles.some(({ relativePath }) =>
+    relativePath === '.agent-knowledge/static/rules/WEB-INTERFACE-GUIDELINES.md'
+  ));
+  assert.ok(templateFiles.some(({ relativePath }) =>
+    relativePath === '.agent-knowledge/static/commands/UI-AUDIT.md'
+  ));
   assert.equal(templateFiles.some(({ relativePath }) =>
     relativePath.startsWith('.agent-knowledge/static/rules/security/')
   ), false);
@@ -286,6 +292,7 @@ test('configuration references resolve and safe-operations guidance is scaffolde
   assert.match(repositoryReadme, /## Recommended Skills/);
   assert.match(repositoryReadme, /## Recommended MCP Servers/);
   assert.match(repositoryReadme, /Context7 MCP/);
+  assert.match(repositoryReadme, /web-design-guidelines/);
 });
 
 test('local setup installs a complete app and updates the user PATH idempotently', async () => {

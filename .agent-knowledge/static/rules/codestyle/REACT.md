@@ -49,6 +49,7 @@
 
 ## Rendering Performance
 
+- Follow `.agent-knowledge/static/rules/WEB-INTERFACE-GUIDELINES.md` for web interface accessibility, focus states, forms, animation, and interaction guidelines.
 - Move JSX that never changes outside the component or to module scope.
 - Use ternary or `{condition && <Component />}`. Never rely on `{count && <C />}` — renders `0` when count is zero.
 - Use `isPending` from `useTransition` instead of manual `isLoading` state.

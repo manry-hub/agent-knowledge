@@ -44,6 +44,7 @@ Provide code reviews that improve code quality AND developer skills:
 
 ### 🟡 Suggestions (Should Fix)
 - Missing input validation
+- Web Interface Guidelines violations (`.agent-knowledge/static/rules/WEB-INTERFACE-GUIDELINES.md`) such as missing aria-labels on icon buttons, outline removal without replacement, unhandled reduced-motion, or form controls without labels
 - Unclear naming or confusing logic
 - Missing tests for important behavior
 - Performance issues (N+1 queries, unnecessary allocations)

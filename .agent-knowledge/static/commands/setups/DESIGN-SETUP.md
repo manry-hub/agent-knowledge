@@ -20,7 +20,7 @@ Do not begin writing `DESIGN.md` until the user has selected a mode.
 
 1. Identify the frontend stack, entry points, primary routes or screens, layouts, design tokens, stylesheets, shared components, fonts, icons, and visual assets in the codebase. Follow the project's declared framework version and package manager.
 2. To understand the UI structurally, use `codebase-memory-mcp` tools (`search_graph`, `trace_path`, `get_code_snippet`) when available; verify material findings in source code.
-3. For UI/UX work, use the `impeccable` skill and the workflow appropriate to a design audit or documentation task. If it is unavailable, follow the installation instructions in `AGENTS.md` before relying on it.
+3. For UI/UX work, review compliance with [Web interface guidelines](../../rules/WEB-INTERFACE-GUIDELINES.md) (`.agent-knowledge/static/rules/WEB-INTERFACE-GUIDELINES.md`) and `.agent-knowledge/static/rules/antislop/UI.md` during design audits. If a tool or skill is unavailable, follow the installation instructions in `AGENTS.md` before relying on it.
 4. If the application can run or is already open, inspect relevant pages and states with Playwright MCP. Use Chrome DevTools MCP to inspect computed styles or visual problems that are difficult to confirm from source. If the project contains a `.pen` file or the user requests Pencil work, read the Pencil skill and use Pencil MCP. If the relevant tool is unavailable, proceed from the available source and assets, then state the runtime-inspection limitation.
 5. Record findings in three clear groups:
    - **Current appearance:** patterns evidenced by source code or the observed UI.
@@ -33,7 +33,7 @@ Do not begin writing `DESIGN.md` until the user has selected a mode.
 
 1. Collect the following visual direction before writing: product goal and audience, platform and primary screen types, available brand identity or assets, visual references and anti-references, desired visual character, responsive and accessibility needs, and approved design decisions.
 2. If material direction is unavailable, ask the user and wait for an answer. Do not invent a brand, color palette, typography, motion, breakpoints, iconography, or interaction patterns.
-3. Use the `impeccable` skill to formulate visual direction from the provided decisions. Record each approved decision as guidance and each unapproved option as a draft or proposal.
+3. Formulate visual direction from the provided decisions and align with `.agent-knowledge/static/rules/antislop/UI.md`. Record each approved decision as guidance and each unapproved option as a draft or proposal.
 4. Write `DESIGN.md` as initial implementation guidance. Do not describe tokens, components, assets, or UI behavior as existing until implementation evidence is available.
 
 ## What to Map

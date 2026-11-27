@@ -50,7 +50,7 @@ flowchart TD
   prompt -->|Development docs| devSetup[DEVDOCS-SETUP: existing or new project]
   prompt -->|Design| designSetup[DESIGN-SETUP: existing or new application]
   prompt -->|Production docs| prodSetup[PRODDOCS-SETUP: existing or planned infrastructure]
-  prompt -->|Other| taskPrompt[Debug, cleanup, security audit, or Compose guidance]
+  prompt -->|Other| taskPrompt[Debug, cleanup, security audit, UI audit, or Compose guidance]
   devSetup --> work
   designSetup --> work
   prodSetup --> work
@@ -86,6 +86,7 @@ This is a decision guide, not a requirement to create every artifact for every t
 | Security requirements during implementation                                              | Applicable controls in [security baseline](.agent-knowledge/static/rules/SECURITY-BASELINE.md)                                                                          |
 | Project stack and testing                                                                | Matching guides in [codestyle](.agent-knowledge/static/rules/codestyle/); shared practices are in [coding standards](.agent-knowledge/static/rules/CODING-STANDARDS.md) |
 | UI direction, interactions, or design system                                             | Root [DESIGN.md](DESIGN.md); update affected guidance as decisions and implementation evolve                                                                            |
+| Web UI compliance, accessibility, and interaction guidelines                             | [Web interface guidelines](.agent-knowledge/static/rules/WEB-INTERFACE-GUIDELINES.md) and [UI visual rules](.agent-knowledge/static/rules/antislop/UI.md)                |
 | Isolated test execution in Orca                                                          | [Orca isolated testing](.agent-knowledge/static/rules/ORCA-ORCHESTRATION.md)                                                                                            |
 
 
@@ -96,7 +97,7 @@ Inspect manifests, lockfiles, runtime versions, and tool configuration before ru
 
 | Path                                         | Purpose                                                                                                                                 |
 | -------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| `.agent-knowledge/static/rules/`             | Safety, Git, security, orchestration, coding, stack-specific, and anti-slop guidance.                                                   |
+| `.agent-knowledge/static/rules/`             | Safety, Git, security, orchestration, coding, stack-specific, web interface guidelines, and anti-slop guidance.                         |
 | `.agent-knowledge/static/commands/`          | Task-specific prompts, invoked manually when relevant.                                                                                  |
 | `.agent-knowledge/static/agents/`            | Role profiles, read in the current session when explicitly requested.                                                                   |
 | `.agent-knowledge/static/templates/`         | Canonical structures for documents and records; copy the structure into the output rather than editing the template.                    |
@@ -122,6 +123,7 @@ These are Markdown instructions to give to an agent, not CLI subcommands. Read t
 | [DEBUG](.agent-knowledge/static/commands/DEBUG.md)                          | Diagnose a reported bug before proposing a minimal fix.                                              |
 | [CLEANUP](.agent-knowledge/static/commands/CLEANUP.md)                      | Audit cleanup candidates, then execute only the approved scope.                                      |
 | [SECURITY-AUDIT](.agent-knowledge/static/commands/SECURITY-AUDIT.md)        | Perform a read-only pre-launch security review and report findings.                                  |
+| [UI-AUDIT](.agent-knowledge/static/commands/UI-AUDIT.md)                    | Perform a concise Web Interface Guidelines audit and report findings in file:line format.           |
 | [DOCKER-COMPOSE](.agent-knowledge/static/commands/DOCKER-COMPOSE.md)        | Apply Compose, container, and verification guidance when creating or changing Compose configuration. |
 
 
@@ -166,13 +168,12 @@ Use an explicit orchestration request whenever executing tests. Dispatch target 
 Optional agent skills for focused workflows. Use them when they fit the task and are available in your agent environment.
 
 
-| Skill                                                                         | Recommended use                                           |
-| ----------------------------------------------------------------------------- | --------------------------------------------------------- |
-| [codebase-memory](https://github.com/DeusData/codebase-memory-mcp)            | Structural codebase questions and impact analysis.        |
-| [impeccable](https://github.com/pbakaus/impeccable)                           | UI and UX design, review, and refinement.                 |
-| [Taste Skill](https://github.com/leonxlnx/taste-skill)                        | Stronger visual direction and frontend design quality.    |
-| [Matt Pocock's Skills](https://github.com/mattpocock/skills)                  | Engineering workflows and reusable development practices. |
-| [OWASP Secure Agent Playbook](https://github.com/OWASP/secure-agent-playbook) | Security reviews, audits, and agent security workflows.   |
+| Skill                                                                         | Recommended use                                         |
+| ----------------------------------------------------------------------------- | ------------------------------------------------------- |
+| [codebase-memory](https://github.com/DeusData/codebase-memory-mcp)            | Structural codebase questions and impact analysis.      |
+| [Taste Skill](https://github.com/leonxlnx/taste-skill)                        | Stronger visual direction and frontend design quality.  |
+| [OWASP Secure Agent Playbook](https://github.com/OWASP/secure-agent-playbook) | Security reviews, audits, and agent security workflows. |
+| [web-design-guidelines](https://github.com/vercel-labs/agent-skills/tree/main/skills/web-design-guidelines) | Review UI code for Web Interface Guidelines compliance, accessibility, interactions, and performance. |
 
 
 ## Recommended MCP Servers

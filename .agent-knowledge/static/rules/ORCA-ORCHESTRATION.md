@@ -31,7 +31,8 @@ Orca orchestration is strictly and exclusively reserved for **testing and qualit
    - Prepares the test dispatch payload: target files, test commands, expected behavior, and preconditions.
 
 2. **Dispatch to Isolated Orca Testing Session**
-   - Launch or hand off to an Orca testing session dedicated to test execution.
+   - Launch or hand off to an Orca testing session dedicated to test execution (e.g. using `$ORCA_CLI_COMMAND` or `orca-ide orchestration`).
+   - Note on execution sandbox: Orca CLI commands must run with host permissions (unsandboxed / `BypassSandbox: true`) because Orca Desktop's runtime socket and state reside in `~/.config/orca` outside the repository workspace boundary.
    - Prompt the testing session with the target scope and instruct it to apply `.agent-knowledge/static/agents/tester.md`.
    - Ensure the testing session operates in its own isolated environment/terminal.
 

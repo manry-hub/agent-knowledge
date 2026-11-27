@@ -53,6 +53,7 @@ Use these shared rules across agents. Follow more specific project or task instr
 - For branch, commit, merge, or pull request work, consult `.agent-knowledge/static/rules/GIT.md` and follow repository conventions and the hosting platform's current state.
 - For security requirements during implementation, consult `.agent-knowledge/static/rules/SECURITY-BASELINE.md` only for controls that apply to the feature or deployment.
 - For product UI work that affects visual direction, interaction patterns, or the design system, consult the root `DESIGN.md`. Add or update only the affected guidance as implementation and approved decisions evolve; keep current patterns, target decisions, and open proposals distinct.
+- For web UI implementation, component accessibility, interaction states, forms, and anti-patterns, follow `.agent-knowledge/static/rules/WEB-INTERFACE-GUIDELINES.md` and `.agent-knowledge/static/rules/antislop/UI.md`.
 
 ## Living Project Documents
 
