@@ -24,7 +24,7 @@ Use these shared rules across agents. Follow more specific project or task instr
 ## Plan and Implement Proportionately
 
 - For substantial, multi-step, or architectural work, define the outcome, scope, assumptions, and observable completion criteria, then outline a concise plan. Use the active agent's planning features when available; small, clear tasks can proceed directly.
-- Use Orca orchestration exclusively for testing. Whenever executing tests, follow `.agent-knowledge/static/rules/ORCA-ORCHESTRATION.md`. Do not use Orca orchestration for parallel feature authoring.
+- Use Orca orchestration exclusively for testing and quality verification per `.agent-knowledge/static/rules/ORCA-ORCHESTRATION.md`. Do not use Orca orchestration for parallel feature authoring.
 - If an important assumption proves false, the approach stops working, or the scope must materially change, pause to explain the change and revise the plan. Get user input when the new scope or decision is not already authorized.
 - Prefer the simplest maintainable solution that meets the request. Avoid speculative features, dependencies, abstractions, or rewrites without a concrete need.
 - Keep changes surgical: follow the project's architecture and conventions, limit edits to the request and its necessary consequences, remove only artifacts made obsolete by the change, and investigate root causes instead of masking them with avoidable workarounds.
@@ -33,9 +33,12 @@ Use these shared rules across agents. Follow more specific project or task instr
 ## Verify and Report
 
 - For substantial work, define how each important outcome will be checked. Choose verification suited to the change: relevant tests, linting, type checks, builds, targeted manual checks, or diff review.
-- Every test execution (unit, integration, e2e, security tests) must run in a separate, isolated session via Orca following `.agent-knowledge/static/rules/ORCA-ORCHESTRATION.md` and applying the `.agent-knowledge/static/agents/tester.md` profile. Do not execute test suites directly in the primary implementation session.
-- Run non-test static checks (linters, formatters, diff reviews) in the primary session. For documentation or configuration changes, compare the final diff with the requested scope and validate affected references or formats. Do not claim a check passed unless it was run; report checks that could not be run and what remains unverified.
-- Summarize material changes, verification results reported by the testing session, and unresolved issues in the final response.
+- Follow a tiered testing architecture per `.agent-knowledge/static/rules/ORCA-ORCHESTRATION.md`:
+  - **In-Session Regression & Fast Feedback:** Pre-existing automated tests (unit and integration suites), linters, type checks, and static analysis may run directly in the primary session for immediate verification.
+  - **Strict Test Integrity Invariant:** The primary implementation session is strictly forbidden from modifying or weakening existing test assertions in `tests/` without explicit user authorization. Always verify via `git diff --stat -- tests/` that existing regression baselines remain intact.
+  - **Isolated Orca Sessions (`tester.md`):** Dispatch to an isolated Orca session when independent cognitive distance or environment isolation is essential: black-box test authoring from requirements, adversarial edge-case/security testing, heavy stateful or browser E2E suites, and independent PR/diff quality audits.
+- For documentation or configuration changes, compare the final diff with the requested scope and validate affected references or formats. Do not claim a check passed unless it was run; report checks that could not be run and what remains unverified.
+- Summarize material changes, verification results, and any unresolved issues in the final response.
 
 ## Task Records and Corrections
 
