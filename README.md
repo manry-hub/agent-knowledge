@@ -56,12 +56,15 @@ flowchart TD
   prodSetup --> work
   taskPrompt --> work
 
-  work --> verify[Run static checks and review diff in primary session]
-  verify --> testing{Execute test suite?}
-  testing -->|Yes| orcaTest[Dispatch to isolated Orca session with tester profile]
-  orcaTest --> testReport[Report test results and failures back to primary session]
+  work --> fastTest[Run existing tests & static checks in primary session]
+  fastTest --> testIntegrity{Test integrity intact? git diff -- tests/}
+  testIntegrity -->|No: tests modified| fixCode[Revert test edits & fix implementation]
+  fixCode --> fastTest
+  testIntegrity -->|Yes| needsOrca{Requires independent QA, adversarial, or E2E?}
+  needsOrca -->|Yes| orcaTest[Dispatch to isolated Orca session with tester profile]
+  orcaTest --> testReport[Report test findings back to primary session]
   testReport --> living[Update affected living documentation]
-  testing -->|No| living
+  needsOrca -->|No| living
   living --> adr{Material architectural decision?}
   adr -->|Yes| adrRecord[Create numbered ADR from template]
   adr -->|No| taskRecord{Substantial or long-running work?}
@@ -87,7 +90,7 @@ This is a decision guide, not a requirement to create every artifact for every t
 | Project stack and testing                                                                | Matching guides in [codestyle](.agent-knowledge/static/rules/codestyle/); shared practices are in [coding standards](.agent-knowledge/static/rules/CODING-STANDARDS.md) |
 | UI direction, interactions, or design system                                             | Root [DESIGN.md](DESIGN.md); update affected guidance as decisions and implementation evolve                                                                            |
 | Web UI compliance, accessibility, and interaction guidelines                             | [Web interface guidelines](.agent-knowledge/static/rules/WEB-INTERFACE-GUIDELINES.md) and [UI visual rules](.agent-knowledge/static/rules/antislop/UI.md)                |
-| Isolated test execution in Orca                                                          | [Orca isolated testing](.agent-knowledge/static/rules/ORCA-ORCHESTRATION.md)                                                                                            |
+| Tiered testing and Orca QA orchestration                                                 | [Orca isolated testing](.agent-knowledge/static/rules/ORCA-ORCHESTRATION.md)                                                                                            |
 
 
 Inspect manifests, lockfiles, runtime versions, and tool configuration before running project commands or changing dependencies. Follow the project's declared versions and scripts. The safety rules also govern authorization for external actions and handling of secrets.
@@ -149,19 +152,22 @@ When writing a profile, describe its purpose, scope, workflow, expected output, 
 
 ## Orca workflow: isolated test sessions
 
-Orca orchestration is strictly and exclusively reserved for testing. Primary implementation sessions handle planning, architecture, and code authoring; every test suite execution (unit, integration, E2E, security) must run inside a separate, isolated Orca session applying the [tester](.agent-knowledge/static/agents/tester.md) profile.
+Orca orchestration is strictly and exclusively reserved for testing and quality verification. We follow a **Two-Tier Testing Architecture**:
 
-The primary session prepares the test scope and handoff context, while the isolated session executes the test suite, verifies determinism and boundaries, and reports findings back. This prevents test artifacts, databases, and background processes from dirtying the primary workspace.
+1. **In-Session Regression & Fast Feedback**: Pre-existing deterministic test suites (unit/integration) run directly in the primary session for immediate verification. The primary developer session is strictly prohibited from modifying existing test assertions in `tests/` without explicit authorization.
+2. **Isolated Orca Sessions**: Orca is dispatched when cognitive independence or environment isolation is genuinely valuable: black-box test authoring from specifications, adversarial and boundary fuzzing, heavy or stateful browser E2E suites (Playwright/Cypress/Dusk), and independent PR diff audits applying the [tester](.agent-knowledge/static/agents/tester.md) profile.
 
 ### Orca test request examples
 
-Use an explicit orchestration request whenever executing tests. Dispatch target scope, expected behavior, and verification criteria to an isolated session:
+Use explicit orchestration requests when dispatching high-value testing to an isolated session:
 
-> Use /orchestration to dispatch a separate testing session using the `tester` agent profile. Run the unit and integration tests for `<module-or-path>`. Report back pass/fail counts, execution time, and any assertion failures.
+> Use /orchestration to dispatch a separate testing session applying `tester.md`. Read `<spec-or-design-doc>` without inspecting the developer's implementation files. Author comprehensive test cases covering happy path, validation rejections, and unauthorized states for `<feature>`.
 
-> Use /orchestration to launch an isolated Orca session for E2E tests. Run `<e2e-spec-file>` against the local build and report any failing journeys with trace logs.
+> Use /orchestration to launch an isolated Orca session for E2E tests (`workspace: "share"`). Run `<e2e-spec-file>` against the local build. Ensure browser artifacts and test database mutations remain isolated in the test workspace, and report failing journeys with trace logs.
 
 > Use /orchestration to have a separate Orca testing session apply `tester.md` on `<changed-components>`. Formulate boundary tests (null, off-by-one, timezone, concurrency) and report defect findings back.
+
+> Use /orchestration to have a separate testing session audit the git diff of `<branch-or-commit>`. Verify that existing test baselines were not modified or bypassed, and confirm that test coverage adequately exercises all newly added branches and error handlers.
 
 ## Recommended Skills
 

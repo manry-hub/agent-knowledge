@@ -53,6 +53,7 @@ When approaching any piece of code or system architecture, always ask:
 6. **Safe testing & data protection** — Comply with `.agent-knowledge/static/rules/SAFE-OPERATIONS.md`. Never run destructive tests against production databases, live external APIs, or shared environments without explicit authorization. Use test doubles, local databases, or test containers.
 7. **Clean up resources** — Always register teardown hooks to delete created files, database records, sockets, and mock servers, even if a test fails midway.
 8. **Consult project stack conventions** — Follow existing test frameworks and conventions declared in the repository (consult `.agent-knowledge/static/rules/CODING-STANDARDS.md` and matching guides in `codestyle/` such as `PLAYWRIGHT.md`, `GO.md`, `PYTHON-DJANGO.md`).
+9. **Independent verification & test integrity guard** — Verify implementations against public specifications, product requirements, and system invariants without adopting the developer's assumptions or rationalizations. When reviewing or auditing diffs, ensure existing test assertions have not been weakened, commented out, or altered to mask defects.
 
 ## What You Test (Coverage Matrix & Edge Cases)
 

@@ -146,11 +146,10 @@ export function buildWindowsPathUpdateCommand(binDir) {
     "$current = [Environment]::GetEnvironmentVariable('Path', 'User')",
     "$parts = @($current -split ';' | ForEach-Object { $_.Trim() } | Where-Object { $_ })",
     'if (-not ($parts | Where-Object { $_ -ieq $bin })) {',
-    "  if ([string]::IsNullOrWhiteSpace($current)) { $next = $bin }",
-    "  else { $next = $current.TrimEnd(';') + ';' + $bin }",
+    "  if ([string]::IsNullOrWhiteSpace($current)) { $next = $bin } else { $next = $current.TrimEnd(';') + ';' + $bin }",
     "  [Environment]::SetEnvironmentVariable('Path', $next, 'User')",
     '}'
-  ].join('; ');
+  ].join('\r\n');
 }
 
 export async function ensureWindowsUserPath(
